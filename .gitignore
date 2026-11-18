@@ -8,3 +8,15 @@ tickets.db
 .venv/
 venv/
 instance/
+
+# Kaggle experiment files (kept separate from main project)
+models/ticket_classifier_kaggle.pkl
+tickets_kaggle_cleaned.csv
+train_kaggle_model.py
+
+# Generated expanded dataset
+tickets_additional.csv
+tickets_expanded.csv
+create_dataset.py
+
+milestone1/models/ticket_classifier_kaggle.pkl
