@@ -23,7 +23,7 @@ def load_model(model_path=MODEL_PATH):
     if not os.path.exists(model_path):
         raise FileNotFoundError(
             f"Saved model not found at '{model_path}'. "
-            "Please run 'python train_model.py' first."
+            "Please run 'python train_model.py' inside the milestone1 directory first."
         )
     return joblib.load(model_path)
 

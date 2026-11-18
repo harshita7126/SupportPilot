@@ -6,6 +6,7 @@ Handles IT support ticket submission, ML-based category classification
 real processing time measurement, SQLite persistence, and dashboard analytics.
 """
 
+import os
 import re
 import time
 from flask import Flask, render_template, request, redirect, url_for, flash
@@ -13,7 +14,8 @@ from classifier import classify_ticket
 from severity import calculate_severity, calculate_priority
 from database import create_table, save_ticket, get_all_tickets, get_dashboard_stats
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"))
 app.secret_key = "supportpilot-dev-key"
 
 create_table()
