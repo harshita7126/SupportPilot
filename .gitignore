@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+backup/
+tickets.db
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+instance/

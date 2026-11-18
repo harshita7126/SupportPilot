@@ -1,0 +1,51 @@
+ticket,category
+wifi is not working,Network
+internet connection is very slow,Network
+unable to connect to office network,Network
+network connection keeps disconnecting,Network
+lan cable connection is not working,Network
+cannot access shared network drive,Network
+office internet is down,Network
+network is showing limited connectivity,Network
+unable to connect to company wifi,Network
+network speed is extremely slow,Network
+vpn is not connecting,VPN
+unable to access company vpn,VPN
+company vpn keeps disconnecting,VPN
+vpn connection failed,VPN
+cannot connect to vpn from home,VPN
+vpn authentication is failing,VPN
+vpn is showing connection error,VPN
+remote vpn access is unavailable,VPN
+vpn disconnects during meetings,VPN
+unable to establish secure vpn connection,VPN
+i forgot my password,Password
+please reset my password,Password
+unable to log in because password is incorrect,Password
+my account password has expired,Password
+password reset link is not working,Password
+account is locked after multiple attempts,Password
+i cannot change my login password,Password
+forgot company account password,Password
+password authentication failed,Password
+unable to access account after password change,Password
+install microsoft office,Software
+application installation required,Software
+microsoft excel is not opening,Software
+unable to install required software,Software
+application keeps crashing,Software
+software update is failing,Software
+microsoft word is showing an error,Software
+browser is not responding,Software
+unable to launch the application,Software
+software license activation failed,Software
+laptop keyboard is not working,Hardware
+monitor display is not working,Hardware
+computer mouse is not responding,Hardware
+laptop screen is damaged,Hardware
+printer is not working,Hardware
+keyboard keys are not responding,Hardware
+laptop battery is not charging,Hardware
+computer is overheating,Hardware
+monitor is showing a black screen,Hardware
+usb port is not detecting devices,Hardware

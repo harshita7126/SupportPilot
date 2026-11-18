@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupportPilot | IT Support Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6fb;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #172554;
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+        }
+
+        .section-title {
+            color: #172554;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #172554;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .priority {
+            font-weight: 700;
+        }
+
+        .small-note {
+            font-size: 0.78rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark px-4 py-3">
+        <span class="navbar-brand fw-bold">SupportPilot</span>
+        <span class="text-white">AI-Powered IT Support Portal &mdash; Milestone 1</span>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-4">
+            {% for category, message in messages %}
+            {% set alert_class = 'alert-info' %}
+            {% if category == 'success' %}
+                {% set alert_class = 'alert-success' %}
+            {% elif category == 'danger' %}
+                {% set alert_class = 'alert-danger' %}
+            {% endif %}
+            <div class="alert {{ alert_class }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Top KPI Row: Total Tickets & Average Processing Time -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card stat-card p-3 h-100">
+                    <div class="stat-label">Total Tickets Received</div>
+                    <div class="stat-value mt-1">{{ stats.total_tickets }}</div>
+                    <div class="small-note mt-1">Stored in SQLite (tickets.db)</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card stat-card p-3 h-100">
+                    <div class="stat-label">Average Processing Time</div>
+                    <div class="stat-value mt-1">
+                        {% if stats.avg_processing_time_ms is not none %}
+                            {{ "%.2f"|format(stats.avg_processing_time_ms) }} ms
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                    <div class="small-note mt-1">
+                        {% if stats.measured_tickets_count > 0 %}
+                            Measured across {{ stats.measured_tickets_count }} ticket(s) (classification + severity/priority)
+                        {% else %}
+                            No measured tickets recorded yet
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Breakdown Row: Categories, Severities, Priority Distribution -->
+        <div class="row g-3 mb-4">
+            <!-- Category Counts -->
+            <div class="col-lg-5">
+                <div class="card main-card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="section-title mb-0">Tickets by Category</h6>
+                        <span class="small-note">TF-IDF + Logistic Regression</span>
+                    </div>
+                    <div class="row g-2 text-center mt-1">
+                        <div class="col-4">
+                            <div class="border rounded p-2 bg-light">
+                                <div class="small text-muted">Network</div>
+                                <div class="fw-bold fs-5">{{ stats.category_counts['Network'] }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2 bg-light">
+                                <div class="small text-muted">VPN</div>
+                                <div class="fw-bold fs-5">{{ stats.category_counts['VPN'] }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2 bg-light">
+                                <div class="small text-muted">Password</div>
+                                <div class="fw-bold fs-5">{{ stats.category_counts['Password'] }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2 bg-light">
+                                <div class="small text-muted">Software</div>
+                                <div class="fw-bold fs-5">{{ stats.category_counts['Software'] }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2 bg-light">
+                                <div class="small text-muted">Hardware</div>
+                                <div class="fw-bold fs-5">{{ stats.category_counts['Hardware'] }}</div>
+                            </div>
+                        </div>
+                        {% if stats.category_counts.get('Unknown', 0) > 0 %}
+                        <div class="col-12">
+                            <div class="border rounded p-2 bg-light">
+                                <span class="small text-muted">Unknown / Uncategorized:</span>
+                                <span class="fw-bold ms-1">{{ stats.category_counts['Unknown'] }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Severity Counts -->
+            <div class="col-lg-3">
+                <div class="card main-card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="section-title mb-0">Severity Counts</h6>
+                        <span class="small-note">Rule-based</span>
+                    </div>
+                    <ul class="list-group list-group-flush mt-1">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="badge bg-danger me-1">Critical</span></span>
+                            <span class="fw-bold">{{ stats.severity_counts['Critical'] }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="badge bg-warning text-dark me-1">High</span></span>
+                            <span class="fw-bold">{{ stats.severity_counts['High'] }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="badge bg-primary me-1">Medium</span></span>
+                            <span class="fw-bold">{{ stats.severity_counts['Medium'] }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span><span class="badge bg-secondary me-1">Low</span></span>
+                            <span class="fw-bold">{{ stats.severity_counts['Low'] }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Priority Distribution -->
+            <div class="col-lg-4">
+                <div class="card main-card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="section-title mb-0">Priority Distribution</h6>
+                        <span class="small-note">P1 &ndash; P4 Mapping</span>
+                    </div>
+                    {% set total_for_pct = stats.total_tickets if stats.total_tickets > 0 else 1 %}
+                    {% set priority_meta = [
+                        ('P1', 'Critical', 'bg-danger'),
+                        ('P2', 'High', 'bg-warning'),
+                        ('P3', 'Medium', 'bg-primary'),
+                        ('P4', 'Low', 'bg-secondary')
+                    ] %}
+                    <div class="mt-2">
+                        {% for code, label, bar_class in priority_meta %}
+                        {% set count = stats.priority_counts[code] %}
+                        {% set pct = (count * 100 / total_for_pct) | round(1) if stats.total_tickets > 0 else 0 %}
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span><strong>{{ code }}</strong> ({{ label }})</span>
+                                <span>{{ count }} ({{ pct }}%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {{ bar_class }}" role="progressbar"
+                                    style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0"
+                                    aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row: Ticket Form + Submitted Tickets Table -->
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card main-card p-4">
+                    <h4 class="section-title mb-3">Submit a Support Ticket</h4>
+                    <form action="{{ url_for('submit_ticket') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Employee Name</label>
+                            <input type="text" name="employee_name" class="form-control" placeholder="e.g. Asha Verma" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Employee Email</label>
+                            <input type="email" name="employee_email" class="form-control" placeholder="e.g. asha@company.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Employee ID</label>
+                            <input type="text" name="employee_id" class="form-control" placeholder="e.g. EMP104" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Department</label>
+                            <select name="department" class="form-select" required>
+                                <option value="">Select Department</option>
+                                <option>IT</option>
+                                <option>HR</option>
+                                <option>Finance</option>
+                                <option>Sales</option>
+                                <option>Operations</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ticket Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="Short summary of the issue" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ticket Description</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Describe the issue and impact..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Submit Ticket</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card main-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="section-title mb-0">Submitted Tickets</h4>
+                        <span class="small-note">Showing {{ tickets|length }} ticket(s)</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Confidence</th>
+                                    <th>Severity</th>
+                                    <th>Priority</th>
+                                    <th>Processing Time</th>
+                                    <th>Submission Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in tickets %}
+                                <tr>
+                                    <td>#{{ ticket.id }}</td>
+                                    <td>{{ ticket.title }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ ticket.category }}</span></td>
+                                    <td>
+                                        {% if ticket.confidence is not none %}
+                                            {{ "%.2f"|format(ticket.confidence) }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ticket.severity == 'Critical' %}
+                                            <span class="badge bg-danger">Critical</span>
+                                        {% elif ticket.severity == 'High' %}
+                                            <span class="badge bg-warning text-dark">High</span>
+                                        {% elif ticket.severity == 'Medium' %}
+                                            <span class="badge bg-primary">Medium</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ ticket.severity }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="priority">{{ ticket.priority }}</td>
+                                    <td>
+                                        {% if ticket.processing_time_ms is not none %}
+                                            {{ "%.2f"|format(ticket.processing_time_ms) }} ms
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ ticket.created_at }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">No tickets submitted yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
